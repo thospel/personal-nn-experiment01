@@ -16,6 +16,8 @@ import gzip
 # Third-party libraries
 import numpy as np
 
+ALL_MULTIPLIER = np.ones((10,1))
+
 def load_data():
     """Return the MNIST data as a tuple containing the training data,
     the validation data, and the test data.
@@ -67,13 +69,16 @@ def load_data_wrapper():
     tr_d, va_d, te_d = load_data()
     training_inputs = [np.reshape(x, (784, 1)) for x in tr_d[0]]
     training_results = [vectorized_result(y) for y in tr_d[1]]
-    training_data = list(zip(training_inputs, training_results))
+    training_data = list(zip(training_inputs, training_results,
+                             [ALL_MULTIPLIER] * len(training_inputs)))
     validation_inputs = [np.reshape(x, (784, 1)) for x in va_d[0]]
     validation_results = [[y] for y in va_d[1]]
-    validation_data = list(zip(validation_inputs, validation_results))
+    validation_data = list(zip(validation_inputs, validation_results,
+                               [ALL_MULTIPLIER] * len(validation_inputs)))
     test_inputs = [np.reshape(x, (784, 1)) for x in te_d[0]]
     test_results = [[y] for y in te_d[1]]
-    test_data = list(zip(test_inputs, test_results))
+    test_data = list(zip(test_inputs, test_results,
+                         [ALL_MULTIPLIER] * len(test_inputs)))
     return (training_data, validation_data, test_data)
 
 def vectorized_result(j):

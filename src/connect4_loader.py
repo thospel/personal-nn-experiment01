@@ -18,6 +18,7 @@ LINE = re.compile(r"(\d*) ((?:\S+ )*)(\d+)\s*", re.ASCII)
 HEIGHT = 6
 WIDTH  = 7
 AREA   = WIDTH * HEIGHT
+ALL_MULTIPLIER = np.ones((WIDTH,1))
 
 def load_file(file, weak=False):
     data = []
@@ -28,10 +29,15 @@ def load_file(file, weak=False):
                 how, scores, id = match.groups()
                 scores = scores.split()
 
-                indices = []
+                indices  = []
+                multiplier = np.ones((WIDTH,1))
                 min = 1000
+                all = True
                 for i,v in enumerate(scores):
-                    if v != 'x':
+                    if v == 'x':
+                        multiplier[i][0] = 0.0
+                        all = False
+                    else:
                         v = int(v)
                         if v <= min:
                             if v < min:
@@ -39,6 +45,9 @@ def load_file(file, weak=False):
                                 indices = [i]
                             else:
                                 indices.append(i)
+                if all:
+                    multiplier = ALL_MULTIPLIER
+
                 if weak:
                     if min > 0:
                         indices = []
@@ -59,7 +68,7 @@ def load_file(file, weak=False):
                     y[x] -= 1
                     board[y[x]][x] = mover
                     mover *= -1.0
-                data.append((board, indices, how, id))
+                data.append((board, indices, multiplier, how, id))
     return data
 
 def load_data(weak=False):
@@ -69,12 +78,14 @@ def load_data(weak=False):
 
 def load_data_wrapper(weak=False):
     tr_d, va_d, te_d = load_data(weak)
-    training_data  = [(np.reshape(board, (AREA, 1)), vectorized_result(indices))
-                     for board, indices,*ignore in tr_d]
-    validation_data= [(np.reshape(board, (AREA, 1)), indices)
-                      for board, indices,*ignore in va_d]
-    test_data      = [(np.reshape(board, (AREA, 1)), indices, how, id)
-                      for board, indices, how, id in te_d]
+    training_data  = [(np.reshape(board, (AREA, 1)),
+                       vectorized_result(indices), multiplier)
+                     for board, indices,multiplier,*ignore in tr_d]
+    validation_data= [(np.reshape(board, (AREA, 1)), indices, multiplier)
+                      for board, indices,multiplier,*ignore in va_d]
+    test_data      = [(np.reshape(board, (AREA, 1)),
+                       indices, multiplier, how, id)
+                      for board, indices, multiplier, how, id in te_d]
     return (training_data, validation_data, test_data)
 
 def vectorized_result(j):
